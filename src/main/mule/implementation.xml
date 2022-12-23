@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="logByDateFlow" doc:id="0fcc95d8-a8eb-4a47-9082-1b9886b015bb" >
+		<ee:transform doc:name="dateFromPapi" doc:id="2f9307ae-6b21-4280-a2c3-063b03f4a4a3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	date: attributes.queryParams.date
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:select doc:name="selectLogForADate" doc:id="15663079-f1b9-455b-a11d-31d57ab8d936" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM login WHERE date = :date]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	date: payload.date
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="response" doc:id="6bfd6e5d-026c-457d-9cf5-3b652b0e649d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="logFlow" doc:id="0ad7f67e-daab-4862-8cfe-277d88d7ac5a" >
+		<ee:transform doc:name="name&amp;MonthFromPapi" doc:id="351432db-0a67-4a90-810c-a3ea2e3e4f0e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	name: attributes.queryParams.name,
+	month: attributes.queryParams.month
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:select doc:name="getLog" doc:id="403de3bf-04d0-4739-92f0-7f8f426b8f04" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT  `date`, `logged in`, `logged off`, `break`, `back` FROM `login` WHERE name = :name AND MONTHNAME(date) = :month]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name: payload.name,
+	month: payload.month
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="response" doc:id="f0e34f73-ba79-44c3-8376-b80e48b2416d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="login_checkFlow" doc:id="b908236c-b444-467a-b15b-009113e41da6" >
+		<db:select doc:name="getLoginForADateAndName" doc:id="aaf8ef00-5534-4c61-b80c-ece81439c0ac" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT  `logged in` FROM `login` WHERE name = :name AND date = :date]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	date: payload.date,
+	name: payload.name
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="response" doc:id="e0d014b4-afb1-4340-9c79-dfba84365d7e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="loginFlow" doc:id="a6dfeb9b-e878-48b0-96af-3c85deb12510" >
+		<db:insert doc:name="insertLoginColumn" doc:id="d6679d1c-9d48-4623-9f0f-556927316d88" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO `login`(`name`, `date`, `logged in`) VALUES (:name,:date,:time)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name: payload.name,
+	date: payload.date,
+	time: payload.time
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="response" doc:id="ce8e110f-3123-4a84-ac3e-0e18afcfc965" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="logoutFlow" doc:id="aa94ef1a-768c-4fae-9bff-9fde9beb7ec4" >
+		<db:update doc:name="updateLogoutColumn" doc:id="d762e583-79e0-43d0-9a04-8638e669bf4a" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE `login` SET `logged off`= :time WHERE name = :name AND date = :date]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name: payload.name,
+	date: payload.date,
+	time: payload.time
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="response" doc:id="b4ed2f5c-7695-4478-97dc-211a2ee4ff73" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="breakFlow" doc:id="6b4108de-f624-4b94-aa24-13570fcbbcc4" >
+		<db:update doc:name="updateBreakColumn" doc:id="de17f214-e455-4568-925b-93b80b2fd91d" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE `login` SET `break`= :time WHERE name = :name AND date = :date]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name: payload.name,
+	date: payload.date,
+	time: payload.time
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="response" doc:id="5552c96b-12bc-4b54-8ef6-2da4e4ac5262" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="backFlow" doc:id="cdc8eaaa-fb77-43d8-a643-d8c0df55e0c4" >
+		<db:update doc:name="updateBackColumn" doc:id="fc47b1a6-a138-454a-9463-caf159a8aa85" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE `login` SET `back`= :time WHERE name = :name AND date = :date]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name: payload.name,
+	date: payload.date,
+	time: payload.time
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="response" doc:id="7d37d362-90d9-46ea-a5e4-44fdfc9f05c8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

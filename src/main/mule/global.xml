@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="365201f1-54cb-4d48-959c-a9e80a6bc834" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="fe0737e9-70f4-4614-a5ed-c3a965cf20e3" file="config.yaml" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="b5cc9cce-003f-49eb-994c-cb206b85d2ba" >
+		<db:my-sql-connection host="${database.host}" port="${database.port}" user="${database.user}" password="${database.password}" database="${database.Database}" />
+	</db:config>
+	<configuration doc:name="Configuration" doc:id="cc1e96db-ca55-4b29-a38c-8a2019282f38" defaultErrorHandler-ref="globalError_Handler" />
+	<error-handler name="globalError_Handler" doc:id="3f33fbd5-d020-4892-8552-2983ab85748a" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="70fc0911-9857-4bfd-9e34-04230ac6ce02" type="DB:BAD_SQL_SYNTAX">
+			<ee:transform doc:name="Transform Message" doc:id="93ab0162-2acb-43d4-8b60-641519ae35a3">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "unable to process sql query ",
+    message: error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<parse-template doc:name="Parse Template" doc:id="657f5195-5e30-4d78-a70f-c6fa9819de17">
+				<content>&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+			</parse-template>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c1d04f83-b7b6-42e4-a70e-d4d9f5643c5b" type="DB:QUERY_EXECUTION">
+			<ee:transform doc:name="Transform Message" doc:id="6d1da32c-5f82-49b8-964f-1c618bcfbcec">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "db query execution failed",
+    message: error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<parse-template doc:name="Parse Template" doc:id="aba1a08f-7327-49ca-8c9b-047fabd2f30a">
+				<content>&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+			</parse-template>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5332838a-c424-4841-94d2-a24f85a77c7b" type="DB:CONNECTIVITY">
+			<ee:transform doc:name="Copy_of_Transform Message" doc:id="30f03641-6d8a-41d9-a44e-91f69aa9486c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "unable to connect server",
+    message: error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<parse-template doc:name="Copy_of_Parse Template" doc:id="061e8c26-2c06-45f1-a5ab-f7da2d1c2cba" >
+				<content >&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+			</parse-template>
+		</on-error-continue>
+	</error-handler>
+</mule>

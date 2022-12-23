@@ -1,0 +1,8 @@
+http:
+ port: "8081"
+database:
+ host: "localhost"
+ port: "3306"
+ user: "root"
+ password: "9037133144"
+ Database: "test"

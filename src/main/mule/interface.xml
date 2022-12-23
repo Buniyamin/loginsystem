@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
+    <apikit:config name="login_system-config" api="resource::b19301a0-e2c3-4fdf-a26a-b4973bbaa76a:login_system:1.0.0:raml:zip:login_system.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="login_system-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="login_system-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request",
+	error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="7f040c7e-3d2d-49dc-893a-8814f22ff09e" >
+					<content >&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+				</parse-template>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found",
+	error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="e59792aa-8d48-45da-8edb-f3236a231f73" >
+					<content >&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+				</parse-template>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed",
+	error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="2706af1e-c515-4dc7-944f-82abfe194ddd" >
+					<content >&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+				</parse-template>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable",
+	error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="eb5ddf7a-3fac-49bb-9cf5-e5faddeb4f60" >
+					<content >&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+				</parse-template>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type",
+	error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="866a4484-33fa-4e27-8335-fad9b6ae4ac3" >
+					<content >&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+				</parse-template>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented",
+	error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="033bb9d5-80f2-4f94-9161-2da7949f3de6" >
+					<content >&lt;html&gt;
+&lt;body&gt;
+&lt;style&gt;
+body {
+  font-size: 100%;
+}
+
+p {
+  font-size: 3em;
+}
+&lt;/style&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.error]&lt;/b&gt; &lt;/p&gt;
+
+&lt;p style=&quot;font-family:verdana; color:black;&quot;&gt;&lt;b&gt;#[payload.message]&lt;/b&gt; &lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</content>
+				</parse-template>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="login_system-console">
+        <http:listener config-ref="HTTP_Listener_config" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="login_system-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\logbydatefromdatabase:login_system-config">
+		<flow-ref doc:name="Flow Reference" doc:id="2d6ed97f-09b6-4545-a634-e979db157f39" name="logByDateFlow"/>
+    </flow>
+    <flow name="get:\logfromdatabase:login_system-config">
+		<flow-ref doc:name="Flow Reference" doc:id="5e49e4a6-c699-4418-be10-8f40b87c9d3d" name="logFlow"/>
+    </flow>
+    <flow name="post:\backupdate:application\json:login_system-config">
+		<flow-ref doc:name="Flow Reference" doc:id="f4ef7f0e-e101-425f-87b2-ad6441262a85" name="backFlow"/>
+    </flow>
+    <flow name="post:\breakupdate:application\json:login_system-config">
+		<flow-ref doc:name="Flow Reference" doc:id="d62d0817-57ab-482f-ac07-1d12e012b353" name="breakFlow"/>
+    </flow>
+    <flow name="post:\logincheck:application\json:login_system-config">
+		<flow-ref doc:name="Flow Reference" doc:id="1f1bb1fd-8026-403b-84d4-6a9999dbd5ea" name="login_checkFlow"/>
+    </flow>
+    <flow name="post:\logininsert:application\json:login_system-config">
+		<flow-ref doc:name="Flow Reference" doc:id="2ec00b50-0605-4a25-95ab-117fae9a24ce" name="loginFlow"/>
+    </flow>
+    <flow name="post:\logoutupdate:application\json:login_system-config">
+		<flow-ref doc:name="Flow Reference" doc:id="496928ee-96d9-4763-81c1-c0af727d03cc" name="logoutFlow"/>
+    </flow>
+</mule>
